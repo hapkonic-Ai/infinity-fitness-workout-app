@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useT, useLanguage } from "@/lib/i18n/use-language";
 import { groupLabel } from "@/lib/i18n/static";
 import { translateExercise } from "@/lib/i18n/exercises";
+import { exerciseImages } from "@/lib/exercise-images";
 
 function parseList(raw: string | null): string[] {
   if (!raw) return [];
@@ -55,6 +56,7 @@ export default function ExerciseDetailPage() {
 
   const instructions = parseList(exercise.instructions);
   const mistakes = parseList(exercise.mistakes);
+  const images = exerciseImages(exercise.name);
 
   return (
     <div className="px-5 pt-6 pb-4 space-y-6">
@@ -88,6 +90,31 @@ export default function ExerciseDetailPage() {
             allowFullScreen
           />
         </div>
+      )}
+
+      {images && (
+        <section>
+          <h2 className="font-display text-2xl tracking-wide mb-3">
+            {t("detail.form")}
+          </h2>
+          <div className="grid grid-cols-2 gap-3">
+            {images.map((src, i) => (
+              <figure key={src}>
+                <div className="overflow-hidden rounded-2xl border border-border bg-card">
+                  <img
+                    src={src}
+                    alt={`${exercise.name} — ${i === 0 ? t("detail.start") : t("detail.finish")}`}
+                    loading="lazy"
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <figcaption className="mt-1.5 text-center text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
+                  {i === 0 ? t("detail.start") : t("detail.finish")}
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </section>
       )}
 
       {exercise.description && (
