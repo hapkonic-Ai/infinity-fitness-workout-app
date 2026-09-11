@@ -4,7 +4,6 @@ import { Label } from "@/components/ui/label";
 import { trpc } from "@/providers/trpc";
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { Dumbbell } from "lucide-react";
 import { useT } from "@/lib/i18n/use-language";
 import { clearManualLogout } from "@/lib/manual-logout";
 
@@ -35,9 +34,11 @@ export default function Login() {
     <div className="min-h-dvh dot-grid flex items-center justify-center px-6">
       <div className="w-full max-w-sm animate-fade-up">
         <div className="flex flex-col items-center text-center mb-10">
-          <div className="h-16 w-16 rounded-full bg-primary flex items-center justify-center mb-5">
-            <Dumbbell className="h-8 w-8 text-primary-foreground" />
-          </div>
+          <img
+            src="/icons/icon-192.png"
+            alt="Infinity Fitness"
+            className="h-24 w-24 rounded-full border border-border mb-5"
+          />
           <h1 className="font-display text-5xl leading-none tracking-wide">
             INFINITY<span className="text-primary">FITNESS</span>
           </h1>
