@@ -1,7 +1,5 @@
 import { Routes, Route } from "react-router";
-import { useEffect } from "react";
 import { Toaster } from "@/components/ui/sonner";
-import { trpc } from "@/providers/trpc";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
@@ -12,27 +10,6 @@ import Admin from "./pages/Admin";
 import { AppShell } from "./components/AppShell";
 import { MemberGate, AdminGate } from "./components/Gates";
 import { LanguageProvider } from "@/lib/i18n/language";
-import { hasManualLogout } from "@/lib/manual-logout";
-
-/**
- * Shared-gym mode: no login screen. If there is no session, silently sign
- * in with the shared member account — unless the user explicitly signed out,
- * in which case they stay on /login until the next manual sign-in.
- * (/login stays available for the admin sign-in.)
- */
-function AutoAuth() {
-  const utils = trpc.useUtils();
-  const me = trpc.auth.me.useQuery(undefined, { retry: false });
-  const login = trpc.auth.loginPassword.useMutation({
-    onSuccess: () => utils.invalidate(),
-  });
-  useEffect(() => {
-    if (me.isError && !login.isPending && !hasManualLogout()) {
-      login.mutate({ username: "trainee", password: "trainee123" });
-    }
-  }, [me.isError, login]);
-  return null;
-}
 
 function MemberPage({ children }: { children: React.ReactNode }) {
   return (
@@ -45,7 +22,6 @@ function MemberPage({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <LanguageProvider>
-      <AutoAuth />
       <Toaster />
       <Routes>
       <Route path="/" element={<MemberPage><Home /></MemberPage>} />

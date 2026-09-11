@@ -1,7 +1,9 @@
 import { useAuth } from "@/hooks/useAuth";
 import { trpc } from "@/providers/trpc";
 import { GeoLock } from "@/components/GeoLock";
-import type { ReactNode } from "react";
+import { flagManualLogout, hasManualLogout } from "@/lib/manual-logout";
+import { useEffect, type ReactNode } from "react";
+import { useNavigate } from "react-router";
 
 function FullScreenMessage({ children }: { children: ReactNode }) {
   return (
@@ -11,19 +13,50 @@ function FullScreenMessage({ children }: { children: ReactNode }) {
   );
 }
 
+const LOGO = (
+  <FullScreenMessage>
+    <p className="font-display text-3xl tracking-wide">
+      INFINITY<span className="text-primary">FITNESS</span>
+    </p>
+  </FullScreenMessage>
+);
+
+/**
+ * Shared-gym gate: fresh sessions are silently signed in with the shared
+ * trainee account (kiosk mode). If sign-in is impossible — the user signed
+ * out explicitly, or auto sign-in failed — redirect to /login instead of
+ * dead-ending on the loader.
+ */
 function AuthGate({ children }: { children: ReactNode }) {
-  // No login redirect: AutoAuth (in App) silently signs members in with the
-  // shared account. While there is no session yet, just show the loader.
   const { user, isLoading } = useAuth();
-  if (isLoading || !user) {
-    return (
-      <FullScreenMessage>
-        <p className="font-display text-3xl tracking-wide">
-          INFINITY<span className="text-primary">FITNESS</span>
-        </p>
-      </FullScreenMessage>
-    );
-  }
+  const navigate = useNavigate();
+  const utils = trpc.useUtils();
+  const login = trpc.auth.loginPassword.useMutation({
+    onSuccess: () => utils.invalidate(),
+    onError: () => flagManualLogout(),
+  });
+
+  const unauthenticated = !isLoading && !user;
+
+  useEffect(() => {
+    if (
+      unauthenticated &&
+      !hasManualLogout() &&
+      !login.isPending &&
+      !login.isError &&
+      !login.isSuccess
+    ) {
+      login.mutate({ username: "trainee", password: "trainee123" });
+    }
+  }, [unauthenticated, login]);
+
+  useEffect(() => {
+    if (unauthenticated && (hasManualLogout() || login.isError)) {
+      navigate("/login", { replace: true });
+    }
+  }, [unauthenticated, login.isError, navigate]);
+
+  if (isLoading || !user) return LOGO;
   return <>{children}</>;
 }
 
@@ -46,13 +79,7 @@ function GeoGate({ children }: { children: ReactNode }) {
   const gym = trpc.geo.myGym.useQuery();
 
   if (status.isLoading) {
-    return (
-      <FullScreenMessage>
-        <p className="font-display text-3xl tracking-wide">
-          INFINITY<span className="text-primary">FITNESS</span>
-        </p>
-      </FullScreenMessage>
-    );
+    return LOGO;
   }
   if (!status.data?.unlocked) {
     return (
