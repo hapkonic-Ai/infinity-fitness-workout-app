@@ -73,11 +73,16 @@ export function MemberGate({ children }: { children: ReactNode }) {
 }
 
 function GeoGate({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const status = trpc.geo.status.useQuery(undefined, {
     refetchInterval: 60_000,
+    enabled: !isAdmin,
   });
   const gym = trpc.geo.myGym.useQuery();
 
+  // Staff manage and test the fence from anywhere — no location check.
+  if (isAdmin) return <>{children}</>;
   if (status.isLoading) {
     return LOGO;
   }

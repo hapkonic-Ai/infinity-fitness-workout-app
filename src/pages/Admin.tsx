@@ -262,6 +262,13 @@ export default function AdminPage() {
       toast.success("Member reassigned");
     },
   });
+  const revokeMutation = trpc.admin.locationSessions.revoke.useMutation({
+    onSuccess: () => {
+      utils.admin.locationSessions.recent.invalidate();
+      toast.success("Session locked");
+    },
+    onError: (e) => toast.error(e.message),
+  });
   const [editing, setEditing] = useState<number | "new" | null>(null);
 
   return (
@@ -399,7 +406,7 @@ export default function AdminPage() {
                   {new Date(s.verifiedAt).toLocaleString()}
                 </p>
               </div>
-              <div className="text-right">
+              <div className="text-right shrink-0">
                 <p
                   className={
                     s.status === "active"
@@ -414,6 +421,17 @@ export default function AdminPage() {
                     ? `${Math.round(s.distanceFromGym)}m from gym`
                     : ""}
                 </p>
+                {s.status === "active" && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-1"
+                    disabled={revokeMutation.isPending}
+                    onClick={() => revokeMutation.mutate({ userId: s.userId })}
+                  >
+                    Lock now
+                  </Button>
+                )}
               </div>
             </div>
           ))}

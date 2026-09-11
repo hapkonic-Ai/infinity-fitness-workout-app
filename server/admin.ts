@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { getDb } from "./queries/connection";
 import { gyms, locationAccessSessions, memberProfiles } from "@db/schema";
 import { createRouter, adminQuery } from "./middleware";
@@ -73,6 +73,22 @@ export const adminRouter = createRouter({
         limit: 50,
       }),
     ),
+
+    /** Immediately expire a member's active location session. */
+    revoke: adminQuery
+      .input(z.object({ userId: z.number() }))
+      .mutation(async ({ input }) => {
+        await getDb()
+          .update(locationAccessSessions)
+          .set({ status: "expired" })
+          .where(
+            and(
+              eq(locationAccessSessions.userId, input.userId),
+              eq(locationAccessSessions.status, "active"),
+            ),
+          );
+        return { ok: true };
+      }),
   }),
 
   /**

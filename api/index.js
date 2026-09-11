@@ -39953,12 +39953,14 @@ var requireLocation = tLocal.middleware(async (opts) => {
   if (!ctx.user) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
-  const valid = await getValidLocationSession(ctx.user.id);
-  if (!valid) {
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message: GeoLock.lockedMessage
-    });
+  if (ctx.user.role !== "admin") {
+    const valid = await getValidLocationSession(ctx.user.id);
+    if (!valid) {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: GeoLock.lockedMessage
+      });
+    }
   }
   const { gym } = await getOrAssignMembership(ctx.user.id);
   return next({
@@ -40098,7 +40100,17 @@ var adminRouter = createRouter({
         orderBy: [desc(locationAccessSessions.verifiedAt)],
         limit: 50
       })
-    )
+    ),
+    /** Immediately expire a member's active location session. */
+    revoke: adminQuery.input(external_exports.object({ userId: external_exports.number() })).mutation(async ({ input: input2 }) => {
+      await getDb().update(locationAccessSessions).set({ status: "expired" }).where(
+        and(
+          eq(locationAccessSessions.userId, input2.userId),
+          eq(locationAccessSessions.status, "active")
+        )
+      );
+      return { ok: true };
+    })
   }),
   /**
    * Test tool: measure any coordinates against a branch fence without

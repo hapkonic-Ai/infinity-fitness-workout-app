@@ -96,19 +96,22 @@ export async function getValidLocationSession(userId: number) {
 /**
  * Geo-fencing: member content requires a valid location authorization
  * (issued by geo.verifyLocation when the device is inside the assigned
- * gym's radius). The middleware attaches the member's gym for context.
+ * gym's radius). Admins are exempt — staff must be able to manage and
+ * test the fence from anywhere.
  */
 const requireLocation = tLocal.middleware(async (opts) => {
   const { ctx, next } = opts;
   if (!ctx.user) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
-  const valid = await getValidLocationSession(ctx.user.id);
-  if (!valid) {
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message: GeoLock.lockedMessage,
-    });
+  if (ctx.user.role !== "admin") {
+    const valid = await getValidLocationSession(ctx.user.id);
+    if (!valid) {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: GeoLock.lockedMessage,
+      });
+    }
   }
   const { gym } = await getOrAssignMembership(ctx.user.id);
   return next({
