@@ -1,0 +1,330 @@
+import { trpc } from "@/providers/trpc";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Crosshair, Plus } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+
+type GymForm = {
+  name: string;
+  address: string;
+  latitude: string;
+  longitude: string;
+  radiusMeters: string;
+  active: boolean;
+};
+
+const emptyForm: GymForm = {
+  name: "",
+  address: "",
+  latitude: "",
+  longitude: "",
+  radiusMeters: "100",
+  active: true,
+};
+
+function GymEditor({
+  id,
+  initial,
+  onDone,
+}: {
+  id?: number;
+  initial: GymForm;
+  onDone: () => void;
+}) {
+  const [form, setForm] = useState<GymForm>(initial);
+  const utils = trpc.useUtils();
+  const invalidate = () => {
+    utils.admin.gyms.list.invalidate();
+    onDone();
+  };
+  const createMutation = trpc.admin.gyms.create.useMutation({
+    onSuccess: () => {
+      toast.success("Gym created");
+      invalidate();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+  const updateMutation = trpc.admin.gyms.update.useMutation({
+    onSuccess: () => {
+      toast.success("Geofence updated");
+      invalidate();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const set = (k: keyof GymForm, v: string | boolean) =>
+    setForm((f) => ({ ...f, [k]: v }));
+
+  const fillFromGps = () => {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setForm((f) => ({
+          ...f,
+          latitude: pos.coords.latitude.toFixed(6),
+          longitude: pos.coords.longitude.toFixed(6),
+        }));
+        toast.success("Coordinates set from your current position");
+      },
+      () => toast.error("Could not read your position"),
+      { enableHighAccuracy: true },
+    );
+  };
+
+  const save = () => {
+    const data = {
+      name: form.name,
+      address: form.address || undefined,
+      latitude: Number(form.latitude),
+      longitude: Number(form.longitude),
+      radiusMeters: Number(form.radiusMeters),
+      active: form.active,
+    };
+    if (id) updateMutation.mutate({ id, data });
+    else createMutation.mutate(data);
+  };
+
+  const pending = createMutation.isPending || updateMutation.isPending;
+
+  return (
+    <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
+      <div className="space-y-1.5">
+        <Label>Name</Label>
+        <Input value={form.name} onChange={(e) => set("name", e.target.value)} />
+      </div>
+      <div className="space-y-1.5">
+        <Label>Address</Label>
+        <Input
+          value={form.address}
+          onChange={(e) => set("address", e.target.value)}
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <Label>Latitude</Label>
+          <Input
+            value={form.latitude}
+            onChange={(e) => set("latitude", e.target.value)}
+            placeholder="12.971600"
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Longitude</Label>
+          <Input
+            value={form.longitude}
+            onChange={(e) => set("longitude", e.target.value)}
+            placeholder="80.243100"
+          />
+        </div>
+      </div>
+      <Button variant="outline" size="sm" onClick={fillFromGps}>
+        <Crosshair className="h-4 w-4 mr-2" /> Use my current position
+      </Button>
+      <div className="space-y-1.5">
+        <Label>Allowed radius (meters)</Label>
+        <Input
+          type="number"
+          min={10}
+          max={5000}
+          value={form.radiusMeters}
+          onChange={(e) => set("radiusMeters", e.target.value)}
+        />
+      </div>
+      <div className="flex items-center justify-between">
+        <Label>Branch active</Label>
+        <Switch
+          checked={form.active}
+          onCheckedChange={(v) => set("active", v)}
+        />
+      </div>
+      <Button className="w-full" disabled={pending} onClick={save}>
+        {id ? "Save geofence" : "Create gym"}
+      </Button>
+    </div>
+  );
+}
+
+export default function AdminPage() {
+  const gymsQuery = trpc.admin.gyms.list.useQuery();
+  const membersQuery = trpc.admin.members.list.useQuery();
+  const sessionsQuery = trpc.admin.locationSessions.recent.useQuery();
+  const utils = trpc.useUtils();
+  const assignMutation = trpc.admin.members.assignGym.useMutation({
+    onSuccess: () => {
+      utils.admin.members.list.invalidate();
+      toast.success("Member reassigned");
+    },
+  });
+  const [editing, setEditing] = useState<number | "new" | null>(null);
+
+  return (
+    <div className="px-5 pt-6 space-y-8 pb-10">
+      <div className="flex items-end justify-between">
+        <div>
+          <h1 className="font-display text-5xl tracking-wide">GEOFENCE</h1>
+          <p className="text-sm text-muted-foreground">
+            Branch coordinates live here — never in the app bundle.
+          </p>
+        </div>
+        <Button size="sm" onClick={() => setEditing("new")}>
+          <Plus className="h-4 w-4 mr-1" /> New
+        </Button>
+      </div>
+
+      <section className="space-y-3">
+        {gymsQuery.isLoading && <Skeleton className="h-28 w-full rounded-2xl" />}
+        {editing === "new" && (
+          <GymEditor initial={emptyForm} onDone={() => setEditing(null)} />
+        )}
+        {(gymsQuery.data ?? []).map((g) =>
+          editing === g.id ? (
+            <GymEditor
+              key={g.id}
+              id={g.id}
+              initial={{
+                name: g.name,
+                address: g.address ?? "",
+                latitude: String(g.latitude),
+                longitude: String(g.longitude),
+                radiusMeters: String(g.radiusMeters),
+                active: g.active,
+              }}
+              onDone={() => setEditing(null)}
+            />
+          ) : (
+            <div
+              key={g.id}
+              className="rounded-2xl border border-border bg-card p-5"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="font-medium">{g.name}</p>
+                  <p className="text-xs text-muted-foreground mt-1 font-mono">
+                    {g.latitude.toFixed(6)}, {g.longitude.toFixed(6)}
+                  </p>
+                </div>
+                <span
+                  className={
+                    g.active
+                      ? "text-[10px] uppercase tracking-widest text-primary"
+                      : "text-[10px] uppercase tracking-widest text-muted-foreground"
+                  }
+                >
+                  {g.active ? "Active" : "Inactive"}
+                </span>
+              </div>
+              <div className="flex items-center justify-between mt-3">
+                <span className="font-display text-2xl text-primary">
+                  {g.radiusMeters}m
+                  <span className="text-xs text-muted-foreground ml-1">
+                    radius
+                  </span>
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEditing(g.id)}
+                >
+                  Edit
+                </Button>
+              </div>
+            </div>
+          ),
+        )}
+      </section>
+
+      <section>
+        <h2 className="font-display text-2xl tracking-wide mb-3">MEMBERS</h2>
+        <div className="space-y-2">
+          {(membersQuery.data ?? []).map((m) => (
+            <div
+              key={m.id}
+              className="rounded-xl border border-border bg-card px-4 py-3 flex items-center justify-between gap-3"
+            >
+              <div className="min-w-0">
+                <p className="text-sm font-medium truncate">
+                  {m.user?.name ?? `User #${m.userId}`}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {m.membershipStatus}
+                </p>
+              </div>
+              <Select
+                value={String(m.gymId)}
+                onValueChange={(v) =>
+                  assignMutation.mutate({ userId: m.userId, gymId: Number(v) })
+                }
+              >
+                <SelectTrigger className="w-44">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {(gymsQuery.data ?? []).map((g) => (
+                    <SelectItem key={g.id} value={String(g.id)}>
+                      {g.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <h2 className="font-display text-2xl tracking-wide mb-1">
+          PRESENCE EVENTS
+        </h2>
+        <p className="text-xs text-muted-foreground mb-3">
+          Verification audit only — precise coordinates are never stored.
+        </p>
+        <div className="space-y-2">
+          {(sessionsQuery.data ?? []).slice(0, 10).map((s) => (
+            <div
+              key={s.id}
+              className="rounded-xl border border-border bg-card px-4 py-3 flex items-center justify-between text-xs"
+            >
+              <div>
+                <p className="text-sm font-medium">User #{s.userId}</p>
+                <p className="text-muted-foreground">
+                  {new Date(s.verifiedAt).toLocaleString()}
+                </p>
+              </div>
+              <div className="text-right">
+                <p
+                  className={
+                    s.status === "active"
+                      ? "text-primary font-semibold"
+                      : "text-muted-foreground"
+                  }
+                >
+                  {s.status}
+                </p>
+                <p className="text-muted-foreground">
+                  {s.distanceFromGym != null
+                    ? `${Math.round(s.distanceFromGym)}m from gym`
+                    : ""}
+                </p>
+              </div>
+            </div>
+          ))}
+          {sessionsQuery.data?.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              No verifications yet.
+            </p>
+          )}
+        </div>
+      </section>
+    </div>
+  );
+}
