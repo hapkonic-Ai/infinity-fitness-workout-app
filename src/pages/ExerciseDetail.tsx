@@ -7,6 +7,7 @@ import { useT, useLanguage } from "@/lib/i18n/use-language";
 import { groupLabel } from "@/lib/i18n/static";
 import { translateExercise } from "@/lib/i18n/exercises";
 import { exerciseImages } from "@/lib/exercise-images";
+import { exerciseGif } from "@/lib/exercise-gifs";
 
 function parseList(raw: string | null): string[] {
   if (!raw) return [];
@@ -57,6 +58,7 @@ export default function ExerciseDetailPage() {
   const instructions = parseList(exercise.instructions);
   const mistakes = parseList(exercise.mistakes);
   const images = exerciseImages(exercise.name);
+  const gif = exerciseGif(exercise.name);
 
   return (
     <div className="px-5 pt-6 pb-4 space-y-6">
@@ -79,6 +81,22 @@ export default function ExerciseDetailPage() {
         </div>
         <DifficultyBadge level={exercise.difficulty} />
       </div>
+
+      {gif && (
+        <section>
+          <h2 className="font-display text-2xl tracking-wide mb-3">
+            {t("detail.motion")}
+          </h2>
+          <div className="overflow-hidden rounded-2xl border border-border bg-card">
+            <img
+              src={gif}
+              alt={`${exercise.name} animated demo`}
+              loading="lazy"
+              className="h-full w-full object-cover"
+            />
+          </div>
+        </section>
+      )}
 
       {exercise.videoUrl && (
         <div className="aspect-video w-full overflow-hidden rounded-2xl border border-border bg-card">

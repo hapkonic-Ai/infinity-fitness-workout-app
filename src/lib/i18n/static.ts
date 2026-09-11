@@ -69,6 +69,7 @@ const S = {
   "detail.howTo": { en: "HOW TO DO IT", hi: "कैसे करें", ta: "எப்படி செய்வது" },
   "detail.notTo": { en: "WHAT NOT TO DO", hi: "क्या न करें", ta: "என்ன செய்யக்கூடாது" },
   "detail.form": { en: "FORM GUIDE", hi: "फॉर्म गाइड", ta: "உருவ வழிகாட்டி" },
+  "detail.motion": { en: "MOTION DEMO", hi: "मोशन डेमो", ta: "அசைவு செயல்விளக்கம்" },
   "detail.start": { en: "Start", hi: "शुरुआत", ta: "தொடக்கம்" },
   "detail.finish": { en: "Finish", hi: "अंतिम स्थिति", ta: "முடிவு" },
   "detail.tip": {
