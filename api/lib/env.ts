@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { createHash } from "node:crypto";
 
 function required(name: string): string {
   const value = process.env[name];
@@ -9,11 +10,15 @@ function required(name: string): string {
 }
 
 export const env = {
-  appId: required("APP_ID"),
-  appSecret: required("APP_SECRET"),
   isProduction: process.env.NODE_ENV === "production",
   databaseUrl: required("DATABASE_URL"),
-  kimiAuthUrl: required("KIMI_AUTH_URL"),
-  kimiOpenUrl: required("KIMI_OPEN_URL"),
-  ownerUnionId: process.env.OWNER_UNION_ID ?? "",
 };
+
+/**
+ * Session tokens are HMAC-signed with a key derived from DATABASE_URL — the
+ * only secret this deployment carries. Rotating the database credential also
+ * invalidates every existing login session.
+ */
+export const sessionSecret = createHash("sha256")
+  .update(env.databaseUrl || "infinity-fitness-dev")
+  .digest();

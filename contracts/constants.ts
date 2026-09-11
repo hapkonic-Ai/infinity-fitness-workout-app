@@ -1,5 +1,5 @@
 export const Session = {
-  cookieName: "kimi_sid",
+  cookieName: "infinity_sid",
   maxAgeMs: 365 * 24 * 60 * 60 * 1000,
 } as const;
 
@@ -19,5 +19,4 @@ export const GeoLock = {
 
 export const Paths = {
   login: "/login",
-  oauthCallback: "/api/oauth/callback",
 } as const;

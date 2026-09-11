@@ -8,22 +8,6 @@ import { Dumbbell } from "lucide-react";
 import { useT } from "@/lib/i18n/use-language";
 import { clearManualLogout } from "@/lib/manual-logout";
 
-function getOAuthUrl() {
-  const kimiAuthUrl = import.meta.env.VITE_KIMI_AUTH_URL;
-  const appID = import.meta.env.VITE_APP_ID;
-  const redirectUri = `${window.location.origin}/api/oauth/callback`;
-  const state = btoa(redirectUri);
-
-  const url = new URL(`${kimiAuthUrl}/api/oauth/authorize`);
-  url.searchParams.set("client_id", appID);
-  url.searchParams.set("redirect_uri", redirectUri);
-  url.searchParams.set("response_type", "code");
-  url.searchParams.set("scope", "profile");
-  url.searchParams.set("state", state);
-
-  return url.toString();
-}
-
 export default function Login() {
   const navigate = useNavigate();
   const t = useT();
@@ -99,15 +83,6 @@ export default function Login() {
             {loginMutation.isPending ? "…" : t("login.submit")}
           </Button>
         </form>
-
-        <button
-          onClick={() => {
-            window.location.href = getOAuthUrl();
-          }}
-          className="mt-5 w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors"
-        >
-          or sign in with Kimi →
-        </button>
       </div>
     </div>
   );
