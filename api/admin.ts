@@ -3,6 +3,7 @@ import { desc, eq } from "drizzle-orm";
 import { getDb } from "./queries/connection";
 import { gyms, locationAccessSessions, memberProfiles } from "@db/schema";
 import { createRouter, adminQuery } from "./middleware";
+import { haversineMeters } from "./geo";
 
 /**
  * Admin system — geo-fence configuration lives here, never in the frontend.
@@ -73,4 +74,40 @@ export const adminRouter = createRouter({
       }),
     ),
   }),
+
+  /**
+   * Test tool: measure any coordinates against a branch fence without
+   * creating a session. Lets admins verify inside/outside behavior from
+   * anywhere.
+   */
+  geofenceTest: adminQuery
+    .input(
+      z.object({
+        gymId: z.number(),
+        latitude: z.number().min(-90).max(90),
+        longitude: z.number().min(-180).max(180),
+        accuracy: z.number().positive().nullable(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const gym = await getDb().query.gyms.findFirst({
+        where: eq(gyms.id, input.gymId),
+      });
+      if (!gym) throw new Error("Gym not found");
+      const distance = haversineMeters(
+        input.latitude,
+        input.longitude,
+        gym.latitude,
+        gym.longitude,
+      );
+      const inside =
+        distance <= gym.radiusMeters ||
+        (input.accuracy != null && distance - input.accuracy <= gym.radiusMeters);
+      return {
+        inside,
+        distance: Math.round(distance),
+        radiusMeters: gym.radiusMeters,
+        gymName: gym.name,
+      };
+    }),
 });
