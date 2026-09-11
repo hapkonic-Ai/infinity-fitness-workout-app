@@ -34,7 +34,7 @@ export default function ExerciseDetailPage() {
     return (
       <div className="px-5 pt-6 space-y-4">
         <Skeleton className="h-8 w-40 rounded-lg" />
-        <Skeleton className="aspect-video w-full rounded-2xl" />
+        <Skeleton className="aspect-[16/10] w-full rounded-2xl" />
         <Skeleton className="h-24 w-full rounded-2xl" />
         <Skeleton className="h-24 w-full rounded-2xl" />
       </div>
@@ -96,18 +96,6 @@ export default function ExerciseDetailPage() {
             />
           </div>
         </section>
-      )}
-
-      {exercise.videoUrl && (
-        <div className="aspect-video w-full overflow-hidden rounded-2xl border border-border bg-card">
-          <iframe
-            src={exercise.videoUrl}
-            title={`${exercise.name} technique`}
-            className="h-full w-full"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          />
-        </div>
       )}
 
       {images && (
