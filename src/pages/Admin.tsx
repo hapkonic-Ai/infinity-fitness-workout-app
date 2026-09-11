@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Crosshair, Plus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import type { Gym } from "@db/schema";
 
 type GymForm = {
   name: string;
@@ -154,6 +155,102 @@ function GymEditor({
   );
 }
 
+function GeofenceTest({ gyms }: { gyms: Gym[] }) {
+  const [gymId, setGymId] = useState<string>("");
+  const [lat, setLat] = useState("");
+  const [lng, setLng] = useState("");
+  const test = trpc.admin.geofenceTest.useMutation();
+  const activeGymId = gymId || (gyms.find((g) => g.active)?.id ?? gyms[0]?.id);
+
+  return (
+    <section>
+      <h2 className="font-display text-2xl tracking-wide mb-1">GEOFENCE TEST</h2>
+      <p className="text-xs text-muted-foreground mb-3">
+        Check any coordinates against a branch — no session is created.
+      </p>
+      <div className="rounded-2xl border border-border bg-card p-5 space-y-3">
+        <div className="space-y-1.5">
+          <Label>Branch</Label>
+          <Select value={String(activeGymId ?? "")} onValueChange={setGymId}>
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {gyms.map((g) => (
+                <SelectItem key={g.id} value={String(g.id)}>
+                  {g.name} ({g.radiusMeters}m)
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label>Latitude</Label>
+            <Input
+              value={lat}
+              onChange={(e) => setLat(e.target.value)}
+              placeholder="12.960293"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Longitude</Label>
+            <Input
+              value={lng}
+              onChange={(e) => setLng(e.target.value)}
+              placeholder="79.154320"
+            />
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                  setLat(pos.coords.latitude.toFixed(6));
+                  setLng(pos.coords.longitude.toFixed(6));
+                },
+                () => toast.error("Could not read your position"),
+                { enableHighAccuracy: true },
+              )
+            }
+          >
+            <Crosshair className="h-4 w-4 mr-2" /> Use my position
+          </Button>
+          <Button
+            size="sm"
+            disabled={test.isPending || !activeGymId || !lat || !lng}
+            onClick={() =>
+              test.mutate({
+                gymId: Number(activeGymId),
+                latitude: Number(lat),
+                longitude: Number(lng),
+                accuracy: 10,
+              })
+            }
+          >
+            Check
+          </Button>
+        </div>
+        {test.data && (
+          <p
+            className={
+              test.data.inside
+                ? "text-sm font-medium text-green-500"
+                : "text-sm font-medium text-primary"
+            }
+          >
+            {test.data.inside ? "INSIDE" : "OUTSIDE"} the fence — {test.data.distance}m
+            from {test.data.gymName} (radius {test.data.radiusMeters}m)
+          </p>
+        )}
+      </div>
+    </section>
+  );
+}
+
 export default function AdminPage() {
   const gymsQuery = trpc.admin.gyms.list.useQuery();
   const membersQuery = trpc.admin.members.list.useQuery();
@@ -169,14 +266,14 @@ export default function AdminPage() {
 
   return (
     <div className="px-5 pt-6 space-y-8 pb-10">
-      <div className="flex items-end justify-between">
-        <div>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
           <h1 className="font-display text-5xl tracking-wide">GEOFENCE</h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground mt-1 max-w-md">
             Branch coordinates live here — never in the app bundle.
           </p>
         </div>
-        <Button size="sm" onClick={() => setEditing("new")}>
+        <Button size="sm" onClick={() => setEditing("new")} className="shrink-0">
           <Plus className="h-4 w-4 mr-1" /> New
         </Button>
       </div>
@@ -243,13 +340,15 @@ export default function AdminPage() {
         )}
       </section>
 
+      <GeofenceTest gyms={gymsQuery.data ?? []} />
+
       <section>
         <h2 className="font-display text-2xl tracking-wide mb-3">MEMBERS</h2>
         <div className="space-y-2">
           {(membersQuery.data ?? []).map((m) => (
             <div
               key={m.id}
-              className="rounded-xl border border-border bg-card px-4 py-3 flex items-center justify-between gap-3"
+              className="rounded-xl border border-border bg-card px-4 py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="min-w-0">
                 <p className="text-sm font-medium truncate">
@@ -265,7 +364,7 @@ export default function AdminPage() {
                   assignMutation.mutate({ userId: m.userId, gymId: Number(v) })
                 }
               >
-                <SelectTrigger className="w-44">
+                <SelectTrigger className="w-full sm:w-48">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

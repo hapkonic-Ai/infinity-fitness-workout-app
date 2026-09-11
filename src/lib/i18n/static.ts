@@ -93,6 +93,48 @@ const S = {
 
   // Language toggle
   "lang.toggle": { en: "Language", hi: "भाषा", ta: "மொழி" },
+
+  // Geo lock screen
+  "geo.title": { en: "LOCATION CHECK", hi: "लोकेशन जांच", ta: "இருப்பிட சரிபார்ப்பு" },
+  "geo.subtitle": {
+    en: "Workouts unlock only when you are at the gym.",
+    hi: "वर्कआउट तभी खुलते हैं जब आप जिम पर हों।",
+    ta: "நீங்கள் ஜிம்மில் இருக்கும்போது மட்டுமே பயிற்சிகள் திறக்கும்.",
+  },
+  "geo.gym": { en: "Gym", hi: "जिम", ta: "ஜிம்" },
+  "geo.radius": { en: "Allowed radius", hi: "अनुमत रेडियस", ta: "அனுமதிக்கப்பட்ட ஆரம்" },
+  "geo.verify": { en: "VERIFY MY LOCATION", hi: "मेरी लोकेशन जांचें", ta: "எனது இருப்பிடத்தை சரிபார்க்கவும்" },
+  "geo.verifying": { en: "VERIFYING…", hi: "जांच हो रही है…", ta: "சரிபார்க்கிறது…" },
+  "geo.verified": {
+    en: "Location verified — workouts unlocked.",
+    hi: "लोकेशन verified — वर्कआउट अनलॉक हो गए।",
+    ta: "இருப்பிடம் சரிபார்க்கப்பட்டது — பயிற்சிகள் திறக்கப்பட்டன.",
+  },
+  "geo.outside": {
+    en: "You appear to be outside the gym area",
+    hi: "आप जिम एरिया के बाहर लग रहे हैं",
+    ta: "நீங்கள் ஜிம் பகுதிக்கு வெளியே இருப்பதாகத் தெரிகிறது",
+  },
+  "geo.poorAccuracy": {
+    en: "GPS signal is too weak — move to an open area and try again.",
+    hi: "GPS सिग्नल बहुत कमज़ोर है — खुली जगह पर जाकर फिर कोशिश करें।",
+    ta: "GPS சமிக்ஞை மிகவும் பலவீனம் — திறந்த இடத்திற்குச் சென்று மீண்டும் முயற்சிக்கவும்.",
+  },
+  "geo.gpsError": {
+    en: "Could not read your position. Allow location permission and try again.",
+    hi: "आपकी लोकेशन नहीं मिल पाई। लोकेशन परमिशन देकर फिर कोशिश करें।",
+    ta: "உங்கள் இருப்பிடம் பெற முடியவில்லை. இருப்பிட அனுமதியை வழங்கி மீண்டும் முயற்சிக்கவும்.",
+  },
+  "geo.distance": { en: "Distance from gym", hi: "जिम से दूरी", ta: "ஜிம்மிலிருந்து தூரம்" },
+  "geo.testToggle": { en: "Test with custom coordinates", hi: "कस्टम निर्देशांकों से टेस्ट करें", ta: "தனிப்பயன் ஆயத்தொடர்களுடன் சோதிக்கவும்" },
+  "geo.testCheck": { en: "CHECK", hi: "जांचें", ta: "சரிபார்க்கவும்" },
+  "geo.testInside": { en: "INSIDE the fence — would unlock", hi: "फेंस के अंदर — अनलॉक होगा", ta: "வேலியின் உள்ளே — திறக்கும்" },
+  "geo.testOutside": { en: "OUTSIDE the fence — would stay locked", hi: "फेंस के बाहर — लॉक रहेगा", ta: "வேலியின் வெளியே — பூட்டப்பட்டே இருக்கும்" },
+  "geo.validFor": {
+    en: "Access valid for 15 minutes after each verification.",
+    hi: "हर वेरिफिकेशन के बाद एक्सेस 15 मिनट के लिए मान्य है।",
+    ta: "ஒவ்வொரு சரிபார்ப்புக்குப் பிறகும் அணுகல் 15 நிமிடங்கள் செல்லுபடியாகும்.",
+  },
 } as const;
 
 export type StringKey = keyof typeof S;

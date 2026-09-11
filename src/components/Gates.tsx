@@ -1,4 +1,6 @@
 import { useAuth } from "@/hooks/useAuth";
+import { trpc } from "@/providers/trpc";
+import { GeoLock } from "@/components/GeoLock";
 import type { ReactNode } from "react";
 
 function FullScreenMessage({ children }: { children: ReactNode }) {
@@ -25,9 +27,42 @@ function AuthGate({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
-/** Member areas: authentication only (geo-fencing has been removed). */
+/**
+ * Member areas: authentication + a valid geofence session. When the member
+ * has no active location authorization, they get the lock screen instead.
+ */
 export function MemberGate({ children }: { children: ReactNode }) {
-  return <AuthGate>{children}</AuthGate>;
+  return (
+    <AuthGate>
+      <GeoGate>{children}</GeoGate>
+    </AuthGate>
+  );
+}
+
+function GeoGate({ children }: { children: ReactNode }) {
+  const status = trpc.geo.status.useQuery(undefined, {
+    refetchInterval: 60_000,
+  });
+  const gym = trpc.geo.myGym.useQuery();
+
+  if (status.isLoading) {
+    return (
+      <FullScreenMessage>
+        <p className="font-display text-3xl tracking-wide">
+          INFINITY<span className="text-primary">FITNESS</span>
+        </p>
+      </FullScreenMessage>
+    );
+  }
+  if (!status.data?.unlocked) {
+    return (
+      <GeoLock
+        gymName={gym.data?.name ?? "Infinity Fitness"}
+        radiusMeters={gym.data?.radiusMeters ?? 100}
+      />
+    );
+  }
+  return <>{children}</>;
 }
 
 /** Admin area: authentication + admin role. */
