@@ -1,18 +1,18 @@
 import "dotenv/config";
 import { createHash } from "node:crypto";
 
-function required(name: string): string {
-  const value = process.env[name];
-  if (!value && process.env.NODE_ENV === "production") {
-    throw new Error(`Missing required environment variable: ${name}`);
-  }
-  return value ?? "";
-}
-
 export const env = {
   isProduction: process.env.NODE_ENV === "production",
-  databaseUrl: required("DATABASE_URL"),
+  databaseUrl: process.env.DATABASE_URL ?? "",
 };
+
+/** Throws a clear error instead of failing deep inside the db driver. */
+export function requireDatabaseUrl(): string {
+  if (!env.databaseUrl) {
+    throw new Error("DATABASE_URL is not configured");
+  }
+  return env.databaseUrl;
+}
 
 /**
  * Session tokens are HMAC-signed with a key derived from DATABASE_URL — the

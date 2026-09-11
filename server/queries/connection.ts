@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
-import { env } from "../lib/env";
+import { requireDatabaseUrl } from "../lib/env";
 import * as schema from "@db/schema";
 import * as relations from "@db/relations";
 
@@ -10,7 +10,7 @@ let instance: ReturnType<typeof drizzle<typeof fullSchema>>;
 
 export function getDb() {
   if (!instance) {
-    const sql = neon(env.databaseUrl);
+    const sql = neon(requireDatabaseUrl());
     instance = drizzle(sql, { schema: fullSchema });
   }
   return instance;
