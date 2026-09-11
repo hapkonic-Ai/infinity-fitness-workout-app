@@ -1,4 +1,4 @@
-import { getDb } from "../api/queries/connection";
+import { getDb } from "../server/queries/connection";
 import { gyms, exercises } from "./schema";
 
 // Every video is Muscle & Strength content — form guides from the M&S

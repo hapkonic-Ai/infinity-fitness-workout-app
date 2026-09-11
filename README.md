@@ -322,12 +322,19 @@ docker build -t infinity-fitness .
 docker run -p 3000:3000 -e DATABASE_URL="postgresql://..." infinity-fitness
 ```
 
-**Vercel + Neon:** the database is already external and serverless. Add `DATABASE_URL` in *Project → Settings → Environment Variables*. Note that this app currently serves the API from the same Node process as the Vite frontend — for Vercel, deploy the API as a serverless function (Hono has a `@hono/vercel` adapter) or keep the Docker/VM deployment.
+**Vercel + Neon (zero-config):** the database is already external and serverless. Add `DATABASE_URL` in *Project → Settings → Environment Variables*, import the repo, and deploy — no other settings needed. On Vercel the build emits:
+
+- `dist/` — the static SPA (Vite detects `VERCEL` and outputs here), with all client routes rewritten to `index.html` via `vercel.json`;
+- `api/index.js` — the entire Hono + tRPC API as **one pre-bundled serverless function** (`server/vercel-entry.ts` bundled by esbuild), so `/api/*` runs on Vercel's Node runtime with zero TS compilation of the repo's sources.
 
 ## Project structure
 
 ```text
-├── api/                  # tRPC API (Hono + tRPC 11)
+├── api/                  # build artifact only: bundled Vercel function (gitignored)
+├── server/               # tRPC API (Hono + tRPC 11)
+│   ├── app.ts            #   Hono app definition (shared by boot + Vercel)
+│   ├── boot.ts           #   local/Docker entry: serves SPA + API, one process
+│   ├── vercel-entry.ts   #   serverless entry: handle(app) → api/index.js
 │   ├── auth-router.ts    #   shared staff/trainee password logins
 │   ├── geo.ts            #   geofence verification + location middleware
 │   ├── content.ts        #   exercise catalog (geo-gated)
@@ -352,5 +359,5 @@ docker run -p 3000:3000 -e DATABASE_URL="postgresql://..." infinity-fitness
 
 - Branch coordinates are server-side only; clients receive just name, radius and their own distance at verification time.
 - Presence audit stores distance and accuracy — never raw GPS coordinates.
-- The two password pairs are defined server-side in `api/auth-router.ts`; the trainee pair is a shared kiosk credential, not per-person identity.
+- The two password pairs are defined server-side in `server/auth-router.ts`; the trainee pair is a shared kiosk credential, not per-person identity.
 - Change both passwords before going to production, and rotate the Neon password if it has ever been shared.

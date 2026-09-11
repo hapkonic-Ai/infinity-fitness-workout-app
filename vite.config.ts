@@ -8,7 +8,7 @@ import { inspectAttr } from 'kimi-plugin-inspect-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
-    devServer({ entry: "api/boot.ts", exclude: [/^\/(?!api\/).*$/] }),
+    devServer({ entry: "server/boot.ts", exclude: [/^\/(?!api\/).*$/] }),
     inspectAttr(), react()],
   server: {
     port: 3000,
@@ -23,7 +23,9 @@ export default defineConfig({
   },
   envDir: path.resolve(__dirname),
   build: {
-    outDir: path.resolve(__dirname, "dist/public"),
+    // Vercel serves dist/ as static output; local/Docker builds keep the
+    // SPA in dist/public next to the bundled server at dist/boot.js.
+    outDir: path.resolve(__dirname, process.env.VERCEL ? "dist" : "dist/public"),
     emptyOutDir: true,
   },
 });
