@@ -649,11 +649,6 @@ var require_cli_options = __commonJS({
   }
 });
 
-// node_modules/.pnpm/hono@4.13.7/node_modules/hono/dist/adapter/vercel/handler.js
-var handle = (app2) => (req) => {
-  return app2.fetch(req);
-};
-
 // node_modules/.pnpm/hono@4.13.7/node_modules/hono/dist/compose.js
 var compose = (middleware, onError, onNotFound) => {
   return (context, next) => {
@@ -666,16 +661,16 @@ var compose = (middleware, onError, onNotFound) => {
       index = i;
       let res;
       let isError2 = false;
-      let handler;
+      let handler2;
       if (middleware[i]) {
-        handler = middleware[i][0][0];
+        handler2 = middleware[i][0][0];
         context.req.routeIndex = i;
       } else {
-        handler = i === middleware.length && next || void 0;
+        handler2 = i === middleware.length && next || void 0;
       }
-      if (handler) {
+      if (handler2) {
         try {
-          res = await handler(context, () => dispatch(i + 1));
+          res = await handler2(context, () => dispatch(i + 1));
         } catch (err) {
           if (err instanceof Error && onError) {
             context.error = err;
@@ -1852,8 +1847,8 @@ var Hono = class _Hono {
         } else {
           this.#addRoute(methodName, this.#path, args1);
         }
-        args.forEach((handler) => {
-          this.#addRoute(methodName, this.#path, handler);
+        args.forEach((handler2) => {
+          this.#addRoute(methodName, this.#path, handler2);
         });
         return this;
       };
@@ -1863,8 +1858,8 @@ var Hono = class _Hono {
         this.#path = p2;
         for (const m2 of [method].flat()) {
           const methodName = m2.toUpperCase();
-          for (const handler of handlers2) {
-            this.#addRoute(methodName, this.#path, handler);
+          for (const handler2 of handlers2) {
+            this.#addRoute(methodName, this.#path, handler2);
           }
         }
       }
@@ -1877,8 +1872,8 @@ var Hono = class _Hono {
         this.#path = "*";
         handlers2.unshift(arg1);
       }
-      handlers2.forEach((handler) => {
-        this.#addRoute(METHOD_NAME_ALL, this.#path, handler);
+      handlers2.forEach((handler2) => {
+        this.#addRoute(METHOD_NAME_ALL, this.#path, handler2);
       });
       return this;
     };
@@ -1920,14 +1915,14 @@ var Hono = class _Hono {
   route(path, app2) {
     const subApp = this.basePath(path);
     app2.routes.map((r) => {
-      let handler;
+      let handler2;
       if (app2.errorHandler === errorHandler) {
-        handler = r.handler;
+        handler2 = r.handler;
       } else {
-        handler = async (c, next) => (await compose([], app2.errorHandler)(c, () => r.handler(c, next))).res;
-        handler[COMPOSED_HANDLER] = r.handler;
+        handler2 = async (c, next) => (await compose([], app2.errorHandler)(c, () => r.handler(c, next))).res;
+        handler2[COMPOSED_HANDLER] = r.handler;
       }
-      subApp.#addRoute(r.method, r.path, handler, r.basePath);
+      subApp.#addRoute(r.method, r.path, handler2, r.basePath);
     });
     return this;
   }
@@ -1965,8 +1960,8 @@ var Hono = class _Hono {
    * })
    * ```
    */
-  onError = (handler) => {
-    this.errorHandler = handler;
+  onError = (handler2) => {
+    this.errorHandler = handler2;
     return this;
   };
   /**
@@ -1984,8 +1979,8 @@ var Hono = class _Hono {
    * })
    * ```
    */
-  notFound = (handler) => {
-    this.#notFoundHandler = handler;
+  notFound = (handler2) => {
+    this.#notFoundHandler = handler2;
     return this;
   };
   /**
@@ -2055,25 +2050,25 @@ var Hono = class _Hono {
         return new Request(url2, request);
       };
     })();
-    const handler = async (c, next) => {
+    const handler2 = async (c, next) => {
       const res = await applicationHandler(replaceRequest(c.req.raw), ...getOptions(c));
       if (res) {
         return res;
       }
       await next();
     };
-    this.#addRoute(METHOD_NAME_ALL, mergePath(path, "*"), handler);
+    this.#addRoute(METHOD_NAME_ALL, mergePath(path, "*"), handler2);
     return this;
   }
-  #addRoute(method, path, handler, baseRoutePath) {
+  #addRoute(method, path, handler2, baseRoutePath) {
     path = mergePath(this._basePath, path);
     const r = {
       basePath: baseRoutePath !== void 0 ? mergePath(this._basePath, baseRoutePath) : this._basePath,
       path,
       method,
-      handler
+      handler: handler2
     };
-    this.router.add(method, path, [handler, r]);
+    this.router.add(method, path, [handler2, r]);
     this.routes.push(r);
   }
   #handleError(err, c) {
@@ -2417,7 +2412,7 @@ var RegExpRouter = class {
       throw e === PATH_ERROR ? new UnsupportedPathError(path) : e;
     }
   }
-  add(method, path, handler) {
+  add(method, path, handler2) {
     const middleware = this.#middleware;
     const routes = this.#routes;
     if (!middleware) {
@@ -2448,7 +2443,7 @@ var RegExpRouter = class {
       for (const handlerMap of [middleware, routes]) {
         for (const m2 of methods) {
           for (const p2 in handlerMap[m2]) {
-            re.test(p2) && handlerMap[m2][p2].push([handler, path]);
+            re.test(p2) && handlerMap[m2][p2].push([handler2, path]);
           }
         }
       }
@@ -2461,7 +2456,7 @@ var RegExpRouter = class {
           this.#insertPath(m2, path2);
           routes[m2][path2] = findMiddleware(middleware[m2], path2) || findMiddleware(middleware[METHOD_NAME_ALL], path2) || [];
         }
-        routes[m2][path2].push([handler, path2]);
+        routes[m2][path2].push([handler2, path2]);
       }
     }
   }
@@ -2511,11 +2506,11 @@ var SmartRouter = class {
   constructor(init) {
     this.#routers = init.routers;
   }
-  add(method, path, handler) {
+  add(method, path, handler2) {
     if (!this.#routes) {
       throw new Error(MESSAGE_MATCHER_IS_ALREADY_BUILT);
     }
-    this.#routes.push([method, path, handler]);
+    this.#routes.push([method, path, handler2]);
   }
   match(method, path) {
     if (!this.#routes) {
@@ -2567,7 +2562,7 @@ var Node2 = class _Node2 {
   #patterns = [];
   #pattern;
   #params = emptyParams;
-  insert(method, path, handler) {
+  insert(method, path, handler2) {
     let curNode = this;
     const parts = splitRoutingPath(path);
     const possibleKeys = /* @__PURE__ */ new Set();
@@ -2589,7 +2584,7 @@ var Node2 = class _Node2 {
     }
     curNode.#methods.push({
       [method]: {
-        handler,
+        handler: handler2,
         possibleKeys: [...possibleKeys],
         score: ++order
       }
@@ -2714,7 +2709,7 @@ var Node2 = class _Node2 {
         return a2.score - b2.score;
       });
     }
-    return [handlerSets.map(({ handler, params }) => [handler, params])];
+    return [handlerSets.map(({ handler: handler2, params }) => [handler2, params])];
   }
 };
 
@@ -2722,9 +2717,9 @@ var Node2 = class _Node2 {
 var TrieRouter = class {
   name = "TrieRouter";
   #node = new Node2();
-  add(method, path, handler) {
+  add(method, path, handler2) {
     for (const result of checkOptionalParameter(path) || [path]) {
-      this.#node.insert(method, result, handler);
+      this.#node.insert(method, result, handler2);
     }
   }
   match(method, path) {
@@ -3627,17 +3622,17 @@ var handlers = [
   octetStreamContentTypeHandler
 ];
 function getContentTypeHandler(req) {
-  const handler = handlers.find((handler$1) => handler$1.isMatch(req));
-  if (handler) return handler;
-  if (!handler && req.method === "GET") return jsonContentTypeHandler;
+  const handler2 = handlers.find((handler$1) => handler$1.isMatch(req));
+  if (handler2) return handler2;
+  if (!handler2 && req.method === "GET") return jsonContentTypeHandler;
   throw new TRPCError({
     code: "UNSUPPORTED_MEDIA_TYPE",
     message: req.headers.has("content-type") ? `Unsupported content-type "${req.headers.get("content-type")}` : "Missing content-type header"
   });
 }
 async function getRequestInfo(opts) {
-  const handler = getContentTypeHandler(opts.req);
-  return await handler.parse(opts);
+  const handler2 = getContentTypeHandler(opts.req);
+  return await handler2.parse(opts);
 }
 function isAbortError(error62) {
   return isObject(error62) && error62["name"] === "AbortError";
@@ -40297,9 +40292,42 @@ app.all("/api/*", (c) => c.json({ error: "Not Found" }, 404));
 var app_default = app;
 
 // server/vercel-entry.ts
-var vercel_entry_default = handle(app_default);
+async function handler(req, res) {
+  const proto = req.headers["x-forwarded-proto"] ?? "https";
+  const host = req.headers.host ?? "localhost";
+  const url2 = `${proto}://${host}${req.url ?? "/"}`;
+  const headers = new Headers();
+  for (const [key, value] of Object.entries(req.headers)) {
+    if (value === void 0) continue;
+    headers.set(key, Array.isArray(value) ? value.join(", ") : value);
+  }
+  const method = req.method ?? "GET";
+  let body;
+  if (method !== "GET" && method !== "HEAD") {
+    const chunks = [];
+    for await (const chunk of req) {
+      chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : chunk);
+    }
+    body = Buffer.concat(chunks);
+  }
+  const request = new Request(url2, { method, headers, body });
+  const response = await app_default.fetch(request);
+  res.statusCode = response.status;
+  const getSetCookie = response.headers.getSetCookie?.bind(response.headers);
+  for (const cookie3 of getSetCookie?.() ?? []) {
+    const previous = res.getHeader("set-cookie");
+    res.setHeader("set-cookie", [
+      ...Array.isArray(previous) ? previous : previous ? [String(previous)] : [],
+      cookie3
+    ]);
+  }
+  response.headers.forEach((value, key) => {
+    if (key.toLowerCase() !== "set-cookie") res.setHeader(key, value);
+  });
+  res.end(Buffer.from(await response.arrayBuffer()));
+}
 export {
-  vercel_entry_default as default
+  handler as default
 };
 /*! Bundled license information:
 
