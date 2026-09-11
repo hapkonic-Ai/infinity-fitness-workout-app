@@ -11,3 +11,16 @@ export const GROUP_ORDER = [
   "Abs",
   "Cardio",
 ];
+
+// Day of week (0 = Sunday) → muscle groups trained that day.
+export const DAY_GROUPS: Record<number, string[]> = {
+  1: ["Chest", "Triceps"],
+  2: ["Lats", "Biceps"],
+  3: ["Shoulders"],
+  4: ["Legs", "Abs"],
+  5: ["Cardio"],
+};
+
+export function todaysGroups(now = new Date()): string[] {
+  return DAY_GROUPS[now.getDay()] ?? [];
+}

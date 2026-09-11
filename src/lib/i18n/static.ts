@@ -49,6 +49,7 @@ const S = {
     ta: "உடல் பகுதியைத் தேர்ந்து, உடற்பயிற்சியைத் தட்டி அதை எப்படி சரியாகச் செய்வது என்று பார்க்கவும்.",
   },
   "workouts.all": { en: "All", hi: "सभी", ta: "அனைத்தும்" },
+  "workouts.today": { en: "Today", hi: "आज", ta: "இன்று" },
   "workouts.circuitTitle": { en: "CIRCUIT TRAINING", hi: "सर्किट ट्रेनिंग", ta: "சர்க்யூட் பயிற்சி" },
   "workouts.circuitText": {
     en: "Do 1 exercise from each body part — chest, triceps, lats, biceps, shoulders, legs and abs — back to back with minimal rest. That is 1 round. Complete 3 to 5 rounds.",
